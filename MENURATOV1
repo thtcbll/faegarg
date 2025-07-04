@@ -1,0 +1,1427 @@
+-- GUI dos RATOS MINI CTY v1 para Roblox
+-- Ajustado: Sliders/troca de cor do ESP Player ficam abaixo dos botões e funcionam corretamente!
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- Criar a tela principal
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RatosGUI"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Função para adicionar UICorner circular
+local function makeCircular(instance, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = instance
+end
+
+-- Função de arrastar elementos
+local function makeDraggable(frame)
+    local dragging, dragInput, mousePos, framePos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            frame.Position = UDim2.new(
+                framePos.X.Scale, framePos.X.Offset + delta.X,
+                framePos.Y.Scale, framePos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- Tela de inserção de Key
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 350, 0, 180)
+KeyFrame.Position = UDim2.new(0.5, -175, 0.5, -90)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+KeyFrame.BackgroundTransparency = 0.35
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Parent = ScreenGui
+makeCircular(KeyFrame, 24)
+makeDraggable(KeyFrame)
+
+local KeyBox = Instance.new("TextBox")
+KeyBox.PlaceholderText = "Insira a Key..."
+KeyBox.Size = UDim2.new(0.8, 0, 0, 32)
+KeyBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+KeyBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+KeyBox.BackgroundTransparency = 0.35
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.Parent = KeyFrame
+makeCircular(KeyBox, 16)
+
+local SubmitButton = Instance.new("TextButton")
+SubmitButton.Text = "Verificar"
+SubmitButton.Size = UDim2.new(0.8, 0, 0, 32)
+SubmitButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+SubmitButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SubmitButton.BackgroundTransparency = 0.35
+SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitButton.Parent = KeyFrame
+makeCircular(SubmitButton, 16)
+
+local validKeys = {
+    ["RATOSPERM"] = true,
+    ["RATOSDIA"] = true,
+    ["RATOSSEM"] = true
+}
+
+-- GUI principal (maior/larga)
+local MainGUI = Instance.new("Frame")
+MainGUI.Size = UDim2.new(0, 600, 0, 500)
+MainGUI.Position = UDim2.new(0.5, -300, 0.5, -250)
+MainGUI.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainGUI.BackgroundTransparency = 0.35
+MainGUI.Visible = false
+MainGUI.Parent = ScreenGui
+makeCircular(MainGUI, 32)
+makeDraggable(MainGUI)
+
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+TopBar.BackgroundTransparency = 0.25
+TopBar.Parent = MainGUI
+makeCircular(TopBar, 20)
+
+local Title = Instance.new("TextLabel")
+Title.Text = "SCRIPT DOS RATOS MINI CTY v1 polenginho passou por aq rs"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1, 0, 1, 0)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 22
+Title.Parent = TopBar
+
+-- Tabs em coluna (vertical) com botões pequenos/circulares - MAIS LARGOS
+local tabs = {"Combate", "FARM", "Teleportar", "ESP", "HITBOX", "OUTROS", "SOBRE"}
+local tabButtons, tabContent = {}, {}
+
+local TabsPanelWidth = 140
+local TabsPanel = Instance.new("Frame")
+TabsPanel.Size = UDim2.new(0, TabsPanelWidth, 1, -40)
+TabsPanel.Position = UDim2.new(0, 0, 0, 40)
+TabsPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+TabsPanel.BackgroundTransparency = 0.3
+TabsPanel.Parent = MainGUI
+makeCircular(TabsPanel, 28)
+
+for i, name in ipairs(tabs) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -24, 0, 36)
+    btn.Position = UDim2.new(0, 12, 0, 12 + (i-1)*48)
+    btn.Text = ""
+    btn.BackgroundColor3 = Color3.fromRGB(48, 48, 48)
+    btn.BackgroundTransparency = 0.25
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 15
+    btn.Parent = TabsPanel
+    makeCircular(btn, 18)
+    tabButtons[name] = btn
+
+    -- Figurinha no botão do tab
+    local tabIcon = Instance.new("ImageLabel")
+    tabIcon.BackgroundTransparency = 1
+    tabIcon.Size = UDim2.new(0, 26, 0, 26)
+    tabIcon.Position = UDim2.new(0, 4, 0.5, -13)
+    tabIcon.Parent = btn
+    tabIcon.Image = ({
+        ["Combate"] = "rbxassetid://6031091002",
+        ["VISUAL"] = "rbxassetid://6031763426",
+        ["FARM"] = "rbxassetid://6031075938",
+        ["OUTROS"] = "rbxassetid://6031624240",
+        ["SOBRE"] = "rbxassetid://6031265989",
+        ["ESP"] = "rbxassetid://6031763426", -- Eye
+        ["HITBOX"] = "rbxassetid://6031071057" -- Box
+    })[name] or ""
+
+    -- Label do texto do tab ao lado da figurinha
+    local tabName = Instance.new("TextLabel")
+    tabName.BackgroundTransparency = 1
+    tabName.Size = UDim2.new(1, -38, 1, 0)
+    tabName.Position = UDim2.new(0, 34, 0, 0)
+    tabName.Text = name
+    tabName.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabName.Font = Enum.Font.SourceSansBold
+    tabName.TextSize = 15
+    tabName.Parent = btn
+
+    local content = Instance.new("Frame")
+    content.Size = UDim2.new(1, -TabsPanelWidth-10, 1, -60)
+    content.Position = UDim2.new(0, TabsPanelWidth+10, 0, 50)
+    content.BackgroundTransparency = 1
+    content.Visible = false
+    content.Parent = MainGUI
+    tabContent[name] = content
+end
+
+-- Alternar abas
+for name, button in pairs(tabButtons) do
+    button.MouseButton1Click:Connect(function()
+        for _, content in pairs(tabContent) do content.Visible = false end
+        tabContent[name].Visible = true
+    end)
+end
+
+-- Conteúdo da aba SOBRE
+local SobreLabel = Instance.new("TextLabel")
+SobreLabel.Size = UDim2.new(1, 0, 1, 0)
+SobreLabel.BackgroundTransparency = 1
+SobreLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SobreLabel.TextWrapped = true
+SobreLabel.Text = [[
+DONO: Ratatoullie
+AJUDANTES: Shark
+VERSÃO: 1.0
+DISCORD: https://discord.gg/rKFeWtESTv
+]]
+SobreLabel.Font = Enum.Font.SourceSans
+SobreLabel.TextSize = 18
+SobreLabel.Parent = tabContent["SOBRE"]
+
+-- Minimizar e restaurar
+local MinButton = Instance.new("TextButton")
+MinButton.Text = "-"
+MinButton.Size = UDim2.new(0, 32, 0, 32)
+MinButton.Position = UDim2.new(1, -36, 0, 4)
+MinButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+MinButton.BackgroundTransparency = 0.25
+MinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinButton.Parent = TopBar
+makeCircular(MinButton, 16)
+
+local MiniGUI = Instance.new("TextButton")
+MiniGUI.Text = "RATINHOS polenginho desbloqueio rs"
+MiniGUI.Size = UDim2.new(0, 150, 0, 40)
+MiniGUI.Position = UDim2.new(0.5, -75, 0.5, -20)
+MiniGUI.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+MiniGUI.BackgroundTransparency = 0.25
+MiniGUI.TextColor3 = Color3.fromRGB(255, 255, 255)
+MiniGUI.Visible = false
+MiniGUI.Parent = ScreenGui
+makeCircular(MiniGUI, 20)
+makeDraggable(MiniGUI)
+
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 350, 0, 180)
+KeyFrame.Position = UDim2.new(0.5, -175, 0.5, -90)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+KeyFrame.BackgroundTransparency = 0.35
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Parent = ScreenGui
+makeCircular(KeyFrame, 24)
+makeDraggable(KeyFrame)
+print("KeyFrame criada")
+
+local KeyBox = Instance.new("TextBox")
+KeyBox.PlaceholderText = "Insira qualquerKey..."
+KeyBox.Size = UDim2.new(0.8, 0, 0, 32)
+KeyBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+KeyBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+KeyBox.BackgroundTransparency = 0.35
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeyBox.Text = ""
+KeyBox.Parent = KeyFrame
+makeCircular(KeyBox, 16)
+print("KeyBox criado")
+
+local SubmitButton = Instance.new("TextButton")
+SubmitButton.Text = "Verificar"
+SubmitButton.Size = UDim2.new(0.8, 0, 0, 32)
+SubmitButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+SubmitButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SubmitButton.BackgroundTransparency = 0.35
+SubmitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SubmitButton.Parent = KeyFrame
+makeCircular(SubmitButton, 16)
+print("SubmitButton criado")
+
+SubmitButton.MouseButton1Click:Connect(function()
+    local inputKey = KeyBox.Text
+    print("Chave inserida: " .. inputKey)
+    if inputKey ~= "" then
+        print("Chave válida, carregando MainGUI...")
+        KeyFrame.Visible = false
+        wait(0.1) -- Pequeno atraso para garantir o carregamento
+        MainGUI.Visible = true
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Chave Válida!",
+            Text = "UI principal carregada com sucesso!",
+            Duration = 2
+        })
+        print("KeyFrame ocultada, MainGUI visível")
+    else
+        print("Erro: Campo de chave vazio")
+        KeyBox.Text = ""
+        KeyBox.PlaceholderText = "Digite algo!"
+        KeyBox.PlaceholderColor3 = Color3.fromRGB(255, 100, 100)
+        wait(0.5)
+        KeyBox.PlaceholderText = "Insira qualquer Key..."
+        KeyBox.PlaceholderColor3 = Color3.fromRGB(200, 200, 200)
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Erro",
+            Text = "O campo de chave não pode estar vazio!",
+            Duration = 2
+        })
+    end
+end)
+
+function adicionarBotao(menu, nome, callback, figurinhaId)
+    if tabContent[menu] then
+        local y = 0
+        for _, v in ipairs(tabContent[menu]:GetChildren()) do
+            if v:IsA("TextButton") then
+                y = y + 44
+            end
+        end
+		
+        local botao = Instance.new("TextButton")
+        botao.Size = UDim2.new(0, 220, 0, 36)
+        botao.Position = UDim2.new(0, 18, 0, y)
+        botao.Text = ""
+        botao.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        botao.BackgroundTransparency = 0.25
+        botao.TextColor3 = Color3.fromRGB(255, 255, 255)
+        botao.Font = Enum.Font.SourceSansBold
+        botao.TextSize = 13
+        botao.Parent = tabContent[menu]
+        makeCircular(botao, 18)
+
+        -- Figurinha (ImageLabel)
+        if figurinhaId then
+            local icone = Instance.new("ImageLabel")
+            icone.BackgroundTransparency = 1
+            icone.Size = UDim2.new(0, 24, 0, 24)
+            icone.Position = UDim2.new(0, 8, 0.5, -12)
+            icone.Image = figurinhaId
+            icone.Parent = botao
+        end
+
+        -- Texto ao lado da figurinha
+        local texto = Instance.new("TextLabel")
+        texto.BackgroundTransparency = 1
+        texto.Size = UDim2.new(1, -38, 1, 0)
+        texto.Position = UDim2.new(0, 36, 0, 0)
+        texto.Text = nome
+        texto.TextColor3 = Color3.fromRGB(255, 255, 255)
+        texto.Font = Enum.Font.SourceSansBold
+        texto.TextSize = 13
+        texto.Parent = botao
+
+        botao.MouseButton1Click:Connect(callback)
+    end
+end
+
+-- Botão "Entrar em carro trancado"
+adicionarBotao("OUTROS", "Entrar em carro trancado", function()
+    local CoreGui = game:GetService("CoreGui")
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+
+    local screenGui = Instance.new("ScreenGui", CoreGui)
+    screenGui.Name = "ForcarCarro"
+
+    local botao = Instance.new("TextButton")
+    botao.Parent = screenGui
+    botao.Size = UDim2.new(0, 160, 0, 28)
+    botao.Position = UDim2.new(0, 20, 0, 300)
+    botao.Text = "Entrar no carro (pode lagar)"
+    botao.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+    botao.BackgroundTransparency = 0.25
+    botao.TextColor3 = Color3.new(1, 1, 1)
+    botao.Font = Enum.Font.GothamBold
+    botao.TextSize = 13
+    botao.Active = true
+    botao.Draggable = true
+    makeCircular(botao, 14)
+
+    local icone = Instance.new("ImageLabel")
+    icone.BackgroundTransparency = 1
+    icone.Size = UDim2.new(0, 18, 0, 18)
+    icone.Position = UDim2.new(0, 4, 0.5, -9)
+    icone.Image = "rbxassetid://6031094678"
+    icone.Parent = botao
+
+    local texto = Instance.new("TextLabel")
+    texto.BackgroundTransparency = 1
+    texto.Size = UDim2.new(1, -24, 1, 0)
+    texto.Position = UDim2.new(0, 22, 0, 0)
+    texto.Text = "Entrar no carro (pode lagar)"
+    texto.TextColor3 = Color3.fromRGB(255, 255, 255)
+    texto.Font = Enum.Font.GothamBold
+    texto.TextSize = 13
+    texto.Parent = botao
+
+    local function forcarEntrada()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if not humanoid then return end
+
+        local raiz = character:FindFirstChild("HumanoidRootPart")
+        if not raiz then return end
+
+        local menorDistancia = math.huge
+        local alvo = nil
+
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("VehicleSeat") and obj.Occupant == nil then
+                local distancia = (obj.Position - raiz.Position).Magnitude
+                if distancia < menorDistancia and distancia < 50 then
+                    menorDistancia = distancia
+                    alvo = obj
+                end
+            end
+        end
+
+        if alvo then
+            raiz.CFrame = alvo.CFrame + Vector3.new(0, 3, 0)
+            wait(0.2)
+            alvo:Sit(humanoid)
+        else
+            warn("Nenhum carro livre próximo encontrado.")
+        end
+    end
+
+    botao.MouseButton1Click:Connect(function()
+        forcarEntrada()
+    end)
+end, "rbxassetid://6031094678")
+
+-- Botão "Auto roubar itens"
+adicionarBotao("Combate", "Auto roubar itens", function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Player = game.Players.LocalPlayer
+    local PlayerGui = Player:WaitForChild("PlayerGui")
+
+    local function deletarNotifyGui()
+        for _, gui in ipairs(PlayerGui:GetChildren()) do
+            if gui.Name == "NotifyGui" and gui:IsA("ScreenGui") then
+                gui:Destroy()
+            end
+        end
+    end
+
+    local itens = {
+        "AK47", "Uzi", "PARAFAL", "Glock 17", "Faca", "IA2", "G3", "Dinamite",
+        "Hi Power", "Natalina", "HK416", "Lockpick", "Escudo", "Skate",
+        "Saco de lixo", "Peça de Arma", "Tratamento", "AR-15", "PS5", "C4", "USP", "Xbox"
+    }
+
+    local args = {
+        [1] = "mudaInv",
+        [2] = "2",
+        [4] = "1"
+    }
+
+    local running = true
+
+    while running do
+        deletarNotifyGui()
+        for i, item in ipairs(itens) do
+            if i <= 16 then
+                args[3] = item
+                args[2] = tostring(i)
+                task.spawn(function()
+                    ReplicatedStorage:WaitForChild("Modules")
+                        :WaitForChild("InvRemotes")
+                        :WaitForChild("InvRequest")
+                        :InvokeServer(unpack(args))
+                end)
+            end
+        end
+        task.wait(0.1)
+    end
+end, "rbxassetid://6031071057")
+
+-- HITBOX SYSTEM (aba HITBOX)
+local hitboxEnabled = false
+local defaultHitboxSize = Vector3.new(5, 5, 5)
+local hitboxSize = defaultHitboxSize
+local originalSizes = {}
+local minSize = 1
+local maxSize = 20
+local sizeStep = 1
+
+local function expandHitbox()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            local humanoidRootPart = plr.Character:FindFirstChild("HumanoidRootPart")
+            local head = plr.Character:FindFirstChild("Head")
+            if humanoidRootPart and head then
+                if not originalSizes[plr] then
+                    originalSizes[plr] = {
+                        HumanoidRootPart = humanoidRootPart.Size,
+                        Head = head.Size
+                    }
+                end
+                if hitboxEnabled then
+                    humanoidRootPart.Size = hitboxSize
+                    head.Size = hitboxSize
+                    humanoidRootPart.Transparency = 0.7
+                    head.Transparency = 0.7
+                    humanoidRootPart.CanCollide = false
+                    head.CanCollide = false
+                else
+                    humanoidRootPart.Size = originalSizes[plr].HumanoidRootPart
+                    head.Size = originalSizes[plr].Head
+                    humanoidRootPart.Transparency = 0
+                    head.Transparency = 0
+                    humanoidRootPart.CanCollide = true
+                    head.CanCollide = true
+                end
+            end
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        if hitboxEnabled then
+            task.wait(0.1)
+            expandHitbox()
+        end
+    end)
+end)
+Players.PlayerRemoving:Connect(function(plr)
+    originalSizes[plr] = nil
+end)
+
+RunService.Heartbeat:Connect(function()
+    if hitboxEnabled then
+        expandHitbox()
+    end
+end)
+
+-- GUI da Hitbox (controlador de tamanho)
+local hitboxGui = Instance.new("ScreenGui")
+hitboxGui.Name = "HitboxGui"
+hitboxGui.Parent = player:WaitForChild("PlayerGui")
+hitboxGui.ResetOnSpawn = false
+hitboxGui.Enabled = false
+
+local hitboxFrame = Instance.new("Frame")
+hitboxFrame.Name = "HitboxFrame"
+hitboxFrame.Size = UDim2.new(0, 240, 0, 70)
+hitboxFrame.Position = UDim2.new(0.5, -120, 0.15, 0)
+hitboxFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+hitboxFrame.BorderSizePixel = 0
+hitboxFrame.Active = true
+hitboxFrame.Draggable = true
+hitboxFrame.Parent = hitboxGui
+makeCircular(hitboxFrame, 14)
+
+local sizeLabel = Instance.new("TextLabel")
+sizeLabel.Name = "SizeLabel"
+sizeLabel.Size = UDim2.new(0.7, 0, 0.5, 0)
+sizeLabel.Position = UDim2.new(0.05, 0, 0.1, 0)
+sizeLabel.BackgroundTransparency = 1
+sizeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+sizeLabel.Font = Enum.Font.Gotham
+sizeLabel.TextSize = 16
+sizeLabel.Text = "Tamanho: " .. hitboxSize.X
+sizeLabel.Parent = hitboxFrame
+
+local btnMenos = Instance.new("TextButton")
+btnMenos.Text = "-"
+btnMenos.Size = UDim2.new(0, 32, 0, 32)
+btnMenos.Position = UDim2.new(0.78, 0, 0.1, 0)
+btnMenos.Parent = hitboxFrame
+btnMenos.BackgroundColor3 = Color3.fromRGB(40,40,40)
+btnMenos.TextColor3 = Color3.fromRGB(255,255,255)
+makeCircular(btnMenos, 12)
+
+local btnMais = Instance.new("TextButton")
+btnMais.Text = "+"
+btnMais.Size = UDim2.new(0, 32, 0, 32)
+btnMais.Position = UDim2.new(0.88, 0, 0.1, 0)
+btnMais.Parent = hitboxFrame
+btnMais.BackgroundColor3 = Color3.fromRGB(40,40,40)
+btnMais.TextColor3 = Color3.fromRGB(255,255,255)
+makeCircular(btnMais, 12)
+
+btnMenos.MouseButton1Click:Connect(function()
+    if hitboxSize.X > minSize then
+        hitboxSize = Vector3.new(hitboxSize.X-sizeStep, hitboxSize.Y-sizeStep, hitboxSize.Z-sizeStep)
+        sizeLabel.Text = "Tamanho: " .. hitboxSize.X
+    end
+end)
+btnMais.MouseButton1Click:Connect(function()
+    if hitboxSize.X < maxSize then
+        hitboxSize = Vector3.new(hitboxSize.X+sizeStep, hitboxSize.Y+sizeStep, hitboxSize.Z+sizeStep)
+        sizeLabel.Text = "Tamanho: " .. hitboxSize.X
+    end
+end)
+
+adicionarBotao("HITBOX", "Ativar Hitbox", function()
+    hitboxEnabled = not hitboxEnabled
+    hitboxGui.Enabled = hitboxEnabled
+    expandHitbox()
+    if not hitboxEnabled then
+        for plr, sizes in pairs(originalSizes) do
+            if plr.Character then
+                local humanoidRootPart = plr.Character:FindFirstChild("HumanoidRootPart")
+                local head = plr.Character:FindFirstChild("Head")
+                if humanoidRootPart and head then
+                    humanoidRootPart.Size = sizes.HumanoidRootPart
+                    head.Size = sizes.Head
+                    humanoidRootPart.Transparency = 0
+                    head.Transparency = 0
+                    humanoidRootPart.CanCollide = true
+                    head.CanCollide = true
+                end
+            end
+        end
+    end
+end, "rbxassetid://6031071057")
+
+-- ESP SYSTEM (aba ESP)
+local espSettings = {
+    showInventory = false,
+    showPlayers = false,
+    playerNameColor = Color3.fromRGB(255,255,255),
+    playerHealthBarColor = Color3.fromRGB(0,255,0),
+    nameSize = 16,
+    healthBarSize = 40,
+}
+
+local function createInventoryESP(plr)
+    if plr == player then return end
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "InventoryESP"
+    billboard.Adornee = root
+    billboard.Parent = root
+    billboard.Size = UDim2.new(0, 120, 0, 24)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    billboard.AlwaysOnTop = true
+
+    local label = Instance.new("TextLabel")
+    label.Parent = billboard
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Text = "Inventário: N/A"
+    label.TextColor3 = Color3.fromRGB(255, 215, 0)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 14
+end
+
+local function removeInventoryESP(plr)
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        local gui = root:FindFirstChild("InventoryESP")
+        if gui then gui:Destroy() end
+    end
+end
+
+local function toggleInventoryESP(state)
+    espSettings.showInventory = state
+    for _, plr in pairs(Players:GetPlayers()) do
+        if state then
+            createInventoryESP(plr)
+        else
+            removeInventoryESP(plr)
+        end
+    end
+end
+
+local function createPlayerESP(plr)
+    if plr == player then return end
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid then return end
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PlayerESP"
+    billboard.Adornee = root
+    billboard.Parent = root
+    billboard.Size = UDim2.new(0, 120, 0, espSettings.healthBarSize + espSettings.nameSize + 2)
+    billboard.StudsOffset = Vector3.new(0, 5, 0)
+    billboard.AlwaysOnTop = true
+
+    -- Name
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = billboard
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.Size = UDim2.new(1, 0, 0, espSettings.nameSize)
+    nameLabel.Text = plr.Name
+    nameLabel.TextColor3 = espSettings.playerNameColor
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = espSettings.nameSize
+
+    -- HealthBar (vertical)
+    local healthBarBG = Instance.new("Frame")
+    healthBarBG.Parent = billboard
+    healthBarBG.Position = UDim2.new(0.45, 0, 0, espSettings.nameSize+2)
+    healthBarBG.Size = UDim2.new(0, 10, 0, espSettings.healthBarSize)
+    healthBarBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    healthBarBG.BorderSizePixel = 0
+
+    local healthBar = Instance.new("Frame")
+    healthBar.Name = "HealthBar"
+    healthBar.Parent = healthBarBG
+    healthBar.Position = UDim2.new(0,0,1,0)
+    healthBar.Size = UDim2.new(1,0,0,0)
+    healthBar.AnchorPoint = Vector2.new(0,1)
+    healthBar.BackgroundColor3 = espSettings.playerHealthBarColor
+    healthBar.BorderSizePixel = 0
+
+    -- Atualizar vida
+    local function updateHealth()
+        if healthBar and humanoid and humanoid.MaxHealth > 0 then
+            healthBar.Size = UDim2.new(1, 0, humanoid.Health / humanoid.MaxHealth, 0)
+        end
+    end
+    humanoid.HealthChanged:Connect(updateHealth)
+    updateHealth()
+end
+
+local function removePlayerESP(plr)
+    local char = plr.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        local gui = root:FindFirstChild("PlayerESP")
+        if gui then gui:Destroy() end
+    end
+end
+
+local function togglePlayerESP(state)
+    espSettings.showPlayers = state
+    for _, plr in pairs(Players:GetPlayers()) do
+        if state then
+            createPlayerESP(plr)
+        else
+            removePlayerESP(plr)
+        end
+    end
+end
+
+-- Variáveis de controle do ESP
+local espSettings = {
+    showInventory = false,
+    showPlayers = false,
+    showStaff = false,
+    playerNameColor = Color3.fromRGB(255, 255, 255),
+    playerHealthBarColor = Color3.fromRGB(0, 255, 0),
+    staffHighlightColor = Color3.fromRGB(255, 0, 85),
+    nameSize = 16,
+    healthBarSize = 40,
+}
+
+local staffESPData, playerESPData, inventoryESPData = {}, {}, {}
+
+-- Função para identificar staff
+local function isStaff(plr)
+    return plr.Team and tostring(plr.Team):lower():find("staff")
+end
+
+-- INVENTÁRIO ESP
+local function removeInventoryESP(plr)
+    if inventoryESPData[plr] then
+        if inventoryESPData[plr].billboard then inventoryESPData[plr].billboard:Destroy() end
+        inventoryESPData[plr] = nil
+    end
+end
+local function createInventoryESP(plr)
+    if plr == player or not plr.Character then return end
+    local char = plr.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    removeInventoryESP(plr)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "InventoryESP"
+    billboard.Adornee = root
+    billboard.Parent = root
+    billboard.Size = UDim2.new(0, 120, 0, 24)
+    billboard.StudsOffset = Vector3.new(0, 4, 0)
+    billboard.AlwaysOnTop = true
+    local label = Instance.new("TextLabel")
+    label.Parent = billboard
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.TextColor3 = Color3.fromRGB(255, 215, 0)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 14
+    label.Text = "Itens: N/A"
+    inventoryESPData[plr] = { billboard = billboard, label = label }
+    local function update()
+        if not plr or not plr.Parent or not char or not char.Parent then return end
+        local items = {}
+        local backpack = plr:FindFirstChild("Backpack")
+        if backpack then for _,obj in ipairs(backpack:GetChildren()) do if obj:IsA("Tool") or obj:IsA("HopperBin") then table.insert(items, obj.Name) end end end
+        for _,obj in ipairs(char:GetChildren()) do if obj:IsA("Tool") or obj:IsA("HopperBin") then table.insert(items, obj.Name) end end
+        label.Text = (#items>0 and ("Itens: " .. table.concat(items, ", "))) or "Inventário vazio"
+    end
+    task.spawn(function()
+        while billboard and billboard.Parent and espSettings.showInventory do update() task.wait(1) end
+        removeInventoryESP(plr)
+    end)
+end
+local function toggleInventoryESP(state)
+    espSettings.showInventory = state
+    for _, plr in pairs(Players:GetPlayers()) do if state then createInventoryESP(plr) else removeInventoryESP(plr) end end
+end
+
+-- PLAYER HEALTH ESP
+local function removePlayerESP(plr)
+    if playerESPData[plr] then
+        if playerESPData[plr].billboard then playerESPData[plr].billboard:Destroy() end
+        playerESPData[plr] = nil
+    end
+end
+local function createPlayerESP(plr)
+    if plr == player or not plr.Character then return end
+    local char = plr.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid then return end
+    removePlayerESP(plr)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "PlayerESP"
+    billboard.Adornee = root
+    billboard.Parent = root
+    billboard.Size = UDim2.new(0, 120, 0, espSettings.healthBarSize + espSettings.nameSize + 2)
+    billboard.StudsOffset = Vector3.new(0, 5, 0)
+    billboard.AlwaysOnTop = true
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Parent = billboard
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Position = UDim2.new(0, 0, 0, 0)
+    nameLabel.Size = UDim2.new(1, 0, 0, espSettings.nameSize)
+    nameLabel.Text = plr.Name
+    nameLabel.TextColor3 = espSettings.playerNameColor
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = espSettings.nameSize
+    local healthBarBG = Instance.new("Frame")
+    healthBarBG.Parent = billboard
+    healthBarBG.Position = UDim2.new(0.45, 0, 0, espSettings.nameSize+2)
+    healthBarBG.Size = UDim2.new(0, 10, 0, espSettings.healthBarSize)
+    healthBarBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    healthBarBG.BorderSizePixel = 0
+    local healthBar = Instance.new("Frame")
+    healthBar.Name = "HealthBar"
+    healthBar.Parent = healthBarBG
+    healthBar.Position = UDim2.new(0,0,1,0)
+    healthBar.Size = UDim2.new(1,0,0,0)
+    healthBar.AnchorPoint = Vector2.new(0,1)
+    healthBar.BackgroundColor3 = espSettings.playerHealthBarColor
+    healthBar.BorderSizePixel = 0
+    local function updateHealth()
+        if healthBar and humanoid and humanoid.MaxHealth > 0 then
+            healthBar.Size = UDim2.new(1, 0, humanoid.Health / humanoid.MaxHealth, 0)
+        end
+    end
+    humanoid.HealthChanged:Connect(updateHealth)
+    updateHealth()
+    playerESPData[plr] = { billboard = billboard }
+end
+local function togglePlayerESP(state)
+    espSettings.showPlayers = state
+    for _, plr in pairs(Players:GetPlayers()) do if state then createPlayerESP(plr) else removePlayerESP(plr) end end
+end
+
+-- STAFF HIGHLIGHT ESP
+local function removeStaffESP(plr)
+    if staffESPData[plr] then
+        if staffESPData[plr].highlight then staffESPData[plr].highlight:Destroy() end
+        if staffESPData[plr].billboard then staffESPData[plr].billboard:Destroy() end
+        staffESPData[plr] = nil
+    end
+end
+local function createESPStaff(plr)
+    if plr == player or not isStaff(plr) or not plr.Character then return end
+    local char = plr.Character
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not root or not humanoid then return end
+    removeStaffESP(plr)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = char
+    highlight.FillColor = espSettings.staffHighlightColor
+    highlight.OutlineColor = Color3.fromRGB(255,255,255)
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = char
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "StaffESP"
+    billboard.Parent = char
+    billboard.Adornee = root
+    billboard.Size = UDim2.new(0, 120, 0, 38)
+    billboard.StudsOffset = Vector3.new(0, 6, 0)
+    billboard.AlwaysOnTop = true
+    local label = Instance.new("TextLabel")
+    label.Parent = billboard
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    label.TextStrokeTransparency = 0.35
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 15
+    label.TextWrapped = true
+    local function updateStaffEsp()
+        if not char or not root or not humanoid or not label or not billboard or not highlight then return end
+        local dist = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and (player.Character.HumanoidRootPart.Position - root.Position).Magnitude or 0
+        label.Text = string.format("%s [STAFF]\nHP: %.0f/%.0f | Dist: %.1f", plr.Name, humanoid.Health, humanoid.MaxHealth, dist)
+    end
+    task.spawn(function()
+        while espSettings.showStaff and char and char.Parent and billboard and billboard.Parent do
+            updateStaffEsp()
+            task.wait(0.5)
+        end
+        removeStaffESP(plr)
+    end)
+    staffESPData[plr] = { highlight = highlight, billboard = billboard }
+end
+local function toggleStaffESP(state)
+    espSettings.showStaff = state
+    for _, plr in pairs(Players:GetPlayers()) do
+        if isStaff(plr) then if state then createESPStaff(plr) else removeStaffESP(plr) end end
+    end
+end
+
+-- Botões na aba ESP
+adicionarBotao("ESP", "ESP Inventário", function()
+    espSettings.showInventory = not espSettings.showInventory
+    toggleInventoryESP(espSettings.showInventory)
+end, "rbxassetid://6031280886")
+adicionarBotao("ESP", "ESP Player [Nome/Vida]", function()
+    espSettings.showPlayers = not espSettings.showPlayers
+    togglePlayerESP(espSettings.showPlayers)
+end, "rbxassetid://6031763426")
+adicionarBotao("ESP", "ESP Staff [Highlight]", function()
+    espSettings.showStaff = not espSettings.showStaff
+    toggleStaffESP(espSettings.showStaff)
+end, "rbxassetid://6031075938")
+adicionarBotao("ESP", "Limpar ESPs", function()
+    for _, plr in pairs(Players:GetPlayers()) do
+        removeInventoryESP(plr)
+        removePlayerESP(plr)
+        removeStaffESP(plr)
+    end
+    inventoryESPData, playerESPData, staffESPData = {}, {}, {}
+end, "rbxassetid://6034304895")
+
+-- Atualização dinâmica para novos jogadores
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        if espSettings.showInventory then createInventoryESP(plr) end
+        if espSettings.showPlayers then createPlayerESP(plr) end
+        if espSettings.showStaff and isStaff(plr) then createESPStaff(plr) end
+    end)
+end)
+Players.PlayerRemoving:Connect(function(plr)
+    removeInventoryESP(plr)
+    removePlayerESP(plr)
+    removeStaffESP(plr)
+end)
+
+-- Ativa a primeira aba por padrão
+tabContent[tabs[1]].Visible = true
+
+-- Farmms (Somente um farms)
+-- Função de notificação simples
+local function notificar(titulo, corpo, tempo)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = titulo,
+        Text = corpo,
+        Duration = tempo or 2
+    })
+end
+
+-- 1. Injetar Farms NECESSÁRIO
+adicionarBotao("FARM", "Injetar(Necessário)", function()
+    for _, prompt in ipairs(Workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then prompt.HoldDuration = 0 end
+    end
+    Workspace.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("ProximityPrompt") then descendant.HoldDuration = 0 end
+    end)
+    notificar("Farms", "Todos os ProximityPrompt setados para 0!", 2)
+end, "rbxassetid://6035067665")
+
+-- 2. Auto-Colect Gari
+adicionarBotao("FARM", "Auto-Colect Gari", function()
+    notificar("Gari", "Auto-Farm Gari ativado!", 2)
+    local function findNearestLEXOS()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local lexosObjects = {}
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj.Name == "LEXOS" and obj:IsA("BasePart") and obj.CanCollide then
+                table.insert(lexosObjects, obj)
+            end
+        end
+        if #lexosObjects == 0 then return nil end
+        local nearest, minDist = nil, math.huge
+        for _, lexos in ipairs(lexosObjects) do
+            local dist = (humanoidRootPart.Position - lexos.Position).Magnitude
+            if dist < minDist then minDist = dist; nearest = lexos end
+        end
+        return nearest
+    end
+    local function teleportToNearestLEXOS()
+        local nearest = findNearestLEXOS()
+        if nearest then
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            humanoidRootPart.CFrame = CFrame.new(nearest.Position)
+        end
+    end
+    for _, prompt in ipairs(Workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then prompt.HoldDuration = 0 end
+    end
+    Workspace.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("ProximityPrompt") then descendant.HoldDuration = 0 end
+    end)
+    while true do
+        teleportToNearestLEXOS()
+        wait(0.3)
+        local nearest = findNearestLEXOS()
+        if nearest then
+            for _, child in ipairs(nearest:GetChildren()) do
+                if child:IsA("ProximityPrompt") then fireproximityprompt(child) break end
+            end
+        end
+        wait(0.3)
+    end
+end, "rbxassetid://6034155975")
+
+-- 3. Auto-Colect Gás
+adicionarBotao("FARM", "Auto-Colect Gás", function()
+    notificar("Gás", "Auto-Farm Gás ativado!", 2)
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/Rafaasxs/Nexus-Menu-/refs/heads/main/tesao'))()
+end, "rbxassetid://6035067830")
+
+-- 4. Auto-Colect Minerador
+adicionarBotao("FARM", "Auto-Colect Minerador", function()
+    notificar("Minerador", "Auto-Farm Rock ativado!", 2)
+    local function findNearestRock()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local rockObjects = {}
+        for _, obj in ipairs(Workspace:GetDescendants()) do
+            if obj.Name == "Rock" and obj:IsA("BasePart") and obj.CanCollide then
+                table.insert(rockObjects, obj)
+            end
+        end
+        if #rockObjects == 0 then return nil end
+        local nearest, minDist = nil, math.huge
+        for _, rock in ipairs(rockObjects) do
+            local dist = (humanoidRootPart.Position - rock.Position).Magnitude
+            if dist < minDist then minDist = dist; nearest = rock end
+        end
+        return nearest
+    end
+    local function teleportToNearestRock()
+        local nearest = findNearestRock()
+        if nearest then
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+            humanoidRootPart.CFrame = CFrame.new(nearest.Position)
+        end
+    end
+    for _, prompt in ipairs(Workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then prompt.HoldDuration = 0 end
+    end
+    Workspace.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("ProximityPrompt") then descendant.HoldDuration = 0 end
+    end)
+    while true do
+        teleportToNearestRock()
+        wait(0.3)
+        local nearest = findNearestRock()
+        if nearest then
+            for _, child in ipairs(nearest:GetChildren()) do
+                if child:IsA("ProximityPrompt") then fireproximityprompt(child) break end
+            end
+        end
+        wait(0.3)
+    end
+end, "rbxassetid://6035067830")
+
+-- 5. Salvar farm posição da fac
+adicionarBotao("FARM", "Salvar Lugar Facção", function()
+    local character = LocalPlayer.Character
+    if character then
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
+            _G.SavedPosition = humanoidRootPart.Position
+            notificar("Posição Salva", "Sua posição foi salva com sucesso!", 2)
+        end
+    end
+end, "rbxassetid://6034304895")
+
+-- 6. Ativar Farm (toggle)
+local function fireAllProximityPrompts()
+    local objetosMissao = Workspace:FindFirstChild("MapaGeral")
+        and Workspace.MapaGeral:FindFirstChild("FavelaV2")
+        and Workspace.MapaGeral.FavelaV2:FindFirstChild("objetosMissao")
+    if objetosMissao then
+        for _, prompt in ipairs(objetosMissao:GetDescendants()) do
+            if prompt:IsA("ProximityPrompt") then
+                prompt.HoldDuration = 0
+                prompt:InputHoldBegin()
+                prompt:InputHoldEnd()
+            end
+        end
+    end
+end
+
+local function findPlayerProximityPrompt()
+    local playerName = LocalPlayer.Name
+    local objetosMissao = Workspace:FindFirstChild("MapaGeral")
+        and Workspace.MapaGeral:FindFirstChild("FavelaV2")
+        and Workspace.MapaGeral.FavelaV2:FindFirstChild("objetosMissao")
+    if objetosMissao then
+        for _, prompt in ipairs(objetosMissao:GetDescendants()) do
+            if prompt:IsA("ProximityPrompt") and prompt.Name == playerName then
+                return prompt
+            end
+        end
+    end
+    return nil
+end
+
+adicionarBotao("FARM", "Ativar Farm Peça (ilegal)", function()
+    if not _G.SavedPosition then
+        notificar("Erro", "Salve uma posição antes de ativar o farm!", 2)
+        return
+    end
+    notificar("AutoFarm", "Farm de peças ativado!", 2)
+    while true do
+        local character = LocalPlayer.Character
+        if not character or not character:FindFirstChild("HumanoidRootPart") then break end
+        fireAllProximityPrompts()
+        character.HumanoidRootPart.CFrame = CFrame.new(_G.SavedPosition)
+        task.wait(0.35)
+        ReplicatedStorage:WaitForChild("RemoteNovos"):WaitForChild("trabalhos"):FireServer("missaoPECAS")
+        local playerPrompt = findPlayerProximityPrompt()
+        if playerPrompt and playerPrompt.Parent then
+            character.HumanoidRootPart.CFrame = CFrame.new(playerPrompt.Parent.Position)
+        end
+        task.wait(0.2)
+    end
+end, "rbxassetid://6035067665")
+
+-- 7. Auto Click
+adicionarBotao("FARM", "Auto Click", function()
+    for _, prompt in ipairs(Workspace:GetDescendants()) do
+        if prompt:IsA("ProximityPrompt") then prompt.HoldDuration = 0 end
+    end
+    Workspace.DescendantAdded:Connect(function(descendant)
+        if descendant:IsA("ProximityPrompt") then descendant.HoldDuration = 0 end
+    end)
+    local function findNearestPrompt()
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local nearest, shortest = nil, math.huge
+        for _, prompt in ipairs(Workspace:GetDescendants()) do
+            if prompt:IsA("ProximityPrompt") and prompt.Parent and prompt.Parent:IsA("BasePart") then
+                local dist = (humanoidRootPart.Position - prompt.Parent.Position).Magnitude
+                if dist <= prompt.MaxActivationDistance and dist < shortest then
+                    shortest = dist
+                    nearest = prompt
+                end
+            end
+        end
+        return nearest
+    end
+    while true do
+        local nearestPrompt = findNearestPrompt()
+        if nearestPrompt then fireproximityprompt(nearestPrompt) end
+        wait(0.1)
+    end
+end, "rbxassetid://6034304895")
+
+-- Adicionais no combate
+adicionarBotao("Combate", "Auto tp safe (com 60 ou menos de vida)", function()
+	local Players = game:GetService("Players")
+	local player = Players.LocalPlayer
+	local teleportCFrame = CFrame.new(
+		-316.091064, 6.29782009, 378.853088,
+		0.383262634, 0, -0.923639536,
+		0,          1, 0,
+		0.923639536, 0, 0.383262634
+	)
+
+	local function monitorarVida(character)
+		local humanoid = character:WaitForChild("Humanoid")
+		local hrp = character:WaitForChild("HumanoidRootPart")
+
+		humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+			if humanoid.Health > 0 and humanoid.Health < 60 then
+				hrp.CFrame = teleportCFrame
+			end
+		end)
+	end
+	player.CharacterAdded:Connect(function(character)
+		monitorarVida(character)
+	end)
+
+	if player.Character then
+		monitorarVida(player.Character)
+	end
+end)
+
+adicionarBotao("Combate", "Auto revistar", function()
+	local Players = game:GetService("Players")
+	local LocalPlayer = Players.LocalPlayer
+	local RS = game:GetService("ReplicatedStorage"):WaitForChild("RemoteNovos")
+	local dsada = RS:WaitForChild("bixobrabo")
+
+	local DETECTION_RADIUS = 10
+	local CheckInterval = 0.5
+
+	local detectados = {}
+
+	function isDead(player)
+		if player and player.Character then
+			local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+			return humanoid and humanoid.Health <= 0
+		end
+		return false
+	end
+
+	function distanceBetween(p1, p2)
+		return (p1 - p2).Magnitude
+	end
+
+	task.spawn(function()
+		while true do
+			task.wait(CheckInterval)
+
+			local character = LocalPlayer.Character
+			if not character or not character:FindFirstChild("HumanoidRootPart") then continue end
+
+			local pos = character.HumanoidRootPart.Position
+
+			for _, otherPlayer in ipairs(Players:GetPlayers()) do
+				if otherPlayer ~= LocalPlayer and isDead(otherPlayer) and otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart") then
+					local otherPos = otherPlayer.Character.HumanoidRootPart.Position
+					if distanceBetween(pos, otherPos) <= DETECTION_RADIUS then
+						if not detectados[otherPlayer] then
+							detectados[otherPlayer] = true
+							dsada:FireServer("/revistar morto")
+						end
+					else
+						detectados[otherPlayer] = nil
+					end
+				end
+			end
+		end
+	end)
+end)
+
+-- Teleportar (Script)
+local function adicionarParagrafoTeleportar()
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -24, 0, 46)
+    frame.Position = UDim2.new(0, 12, 0, 8)
+    frame.BackgroundTransparency = 1
+    frame.Parent = tabContent["Teleportar"]
+    local label = Instance.new("TextLabel")
+    label.Text = "Sistema de teleporte rápido"
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.Font = Enum.Font.SourceSansBold
+    label.TextSize = 17
+    label.BackgroundTransparency = 1
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.Parent = frame
+end
+adicionarParagrafoTeleportar()
+
+-- Cria coluna scrollável para os botões
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Name = "TeleportsScroll"
+scrollFrame.Size = UDim2.new(1, -24, 1, -62) -- -62 para não cobrir o parágrafo/topo
+scrollFrame.Position = UDim2.new(0, 12, 0, 54)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Corrigido: canvas cresce automaticamente
+scrollFrame.Parent = tabContent["Teleportar"]
+
+-- ListLayout para organizar os botões verticalmente (corrigido para respeitar padding e alinhamento)
+local layout = Instance.new("UIListLayout")
+layout.Parent = scrollFrame
+layout.Padding = UDim.new(0, 8)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+-- Corrija: defina o tamanho automático dos botões para que o texto não sobreponha
+-- Também ajuste o TextLabel dentro do botão para AnchorPoint e alinhamento corretos
+
+-- Função para criar botão no scrollframe (padrão adicionarBotao)
+local function adicionarBotaoScrollTeleportar(nome, callback, icone)
+    local botao = Instance.new("TextButton")
+    botao.Size = UDim2.new(0, 220, 0, 36)
+    botao.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    botao.BackgroundTransparency = 0.25
+    botao.Text = ""
+    botao.AutoButtonColor = true
+    botao.TextColor3 = Color3.fromRGB(255, 255, 255)
+    botao.Font = Enum.Font.SourceSansBold
+    botao.TextSize = 13
+    botao.Parent = scrollFrame
+
+    -- Arredondamento
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 18)
+    corner.Parent = botao
+
+    -- Icone
+    if icone then
+        local iconeImg = Instance.new("ImageLabel")
+        iconeImg.BackgroundTransparency = 1
+        iconeImg.Size = UDim2.new(0, 24, 0, 24)
+        iconeImg.Position = UDim2.new(0, 8, 0.5, -12)
+        iconeImg.Image = icone
+        iconeImg.Parent = botao
+        iconeImg.ZIndex = 2
+    end
+
+    -- Texto (corrigido: AnchorPoint, alinhamento, e ZIndex)
+    local texto = Instance.new("TextLabel")
+    texto.BackgroundTransparency = 1
+    texto.Size = UDim2.new(1, -38, 1, 0)
+    texto.Position = UDim2.new(0, 36, 0, 0)
+    texto.AnchorPoint = Vector2.new(0,0)
+    texto.Text = nome
+    texto.TextColor3 = Color3.fromRGB(255, 255, 255)
+    texto.Font = Enum.Font.SourceSansBold
+    texto.TextSize = 13
+    texto.TextXAlignment = Enum.TextXAlignment.Left
+    texto.TextYAlignment = Enum.TextYAlignment.Center
+    texto.Parent = botao
+    texto.ZIndex = 2
+
+    -- Corrige: força o TextLabel a não encostar no topo ou sobrepor
+    texto.ClipsDescendants = false
+    botao.ClipsDescendants = false
+
+    botao.MouseButton1Click:Connect(callback)
+end
+
+-- Função para adicionar botões de teleporte
+local function adicionarBotaoTeleportar(nome, cframe)
+    adicionarBotaoScrollTeleportar(nome, function()
+        local player = game:GetService("Players").LocalPlayer
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = cframe * CFrame.new(0, 3, 0)
+            Fluent:Notify({
+                Title = "Teleporte",
+                Content = "Teleportado para " .. nome .. "!",
+                Duration = 2
+            })
+        else
+            Fluent:Notify({
+                Title = "Erro",
+                Content = "Personagem não encontrado!",
+                Duration = 2
+            })
+        end
+    end, "rbxassetid://6035067830")
+end
+
+-- Lista dos teleports
+local teleportLocations = {
+    {Name = "Praça", CFrame = CFrame.new(-291.579559, 3.26299787, 342.192535)},
+    {Name = "Gás", CFrame = CFrame.new(-469.959015, 3.25349784, -54.3936005)},
+    {Name = "HP", CFrame = CFrame.new(-543.439941, 3.26299858, 645.16864)},
+    {Name = "Tabacaria", CFrame = CFrame.new(-83.1141129, 13.1430578, 74.7073364)},
+    {Name = "Garagem", CFrame = CFrame.new(-466.870148, 7.64567232, 350.242737)},
+    {Name = "Concessionaria", CFrame = CFrame.new(-91.3902893, 8.07136822, 520.355347)},
+    {Name = "Gari", CFrame = CFrame.new(-518.672852, 3.16749811, -1.16962147, 0, 0, -1, 0, 1, 0, 1, 0, 0)},
+    {Name = "Imobiliaria", CFrame = CFrame.new(-284.904785, 8.26088619, -72.2896194, 0, 0, -1, 0, 1, 0, 1, 0, 0)},
+    {Name = "PM", CFrame = CFrame.new(-980.181458, 2.27553082, 467.080536, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+    {Name = "PRF", CFrame = CFrame.new(6662.24512, 36.6637421, 5047.83838, 0.707134247, 0, 0.707079291, 0, 1, 0, -0.707079291, 0, 0.707134247)},
+    {Name = "Mineração", CFrame = CFrame.new(201.932144, 2.76136589, 145.50531, 0, 0, 1, 0, 1, -0, -1, 0, 0)},
+    {Name = "Mecânica", CFrame = CFrame.new(-180.608261, 3.29813337, -532.4151, 0.422592998, -0, -0.906319618, 0, 1, -0, 0.906319618, 0, 0.422592998)},
+    {Name = "Fazenda", CFrame = CFrame.new(817.243225, 3.26249814, -87.316864, 0, 0, 1, 0, 1, 0, -1, 0, 0)},
+    {Name = "Prefeitura", CFrame = CFrame.new(-284.388458, 15.1148872, 88.0397873, 0, 0, -1, 0, 1, 0, 1, 0, 0)},
+    {Name = "Banco", CFrame = CFrame.new(-27.2709007, 11.5685892, 418.200653, 1, 0, 0, 0, 1, 0, 0, 0, 1)},
+    {Name = "Ilegal", CFrame = CFrame.new(12045.0146, 37.3188896, 12826.2041, -0.257956624, 0.00115467981, -0.966156006, -0.0795417428, 0.99657917, 0.0224280898, 0.962876916, 0.0826351941, -0.256982446)},
+    {Name = "Predio 1", CFrame = CFrame.new(-1595.23328, 204.074341, 555.895386, 0.939687431, -0.34203434, 1.81794167e-06, 1.81794167e-06, 1.02519989e-05, 1, -0.34203434, -0.93968749, 1.02519989e-05)},
+    {Name = "Devs Mini City", CFrame = CFrame.new(2555.44263, 303.167755, -1004.13763, -0.422592998, 0, 0.906319618, 0, 1, 0, -0.906319618, 0, -0.422592998)}
+}
+for _, location in ipairs(teleportLocations) do
+    adicionarBotaoTeleportar(location.Name, location.CFrame)
+end
+
+-- Variável para salvar posição
+local savedPosition = nil
+
+adicionarBotaoScrollTeleportar("Salvar Posição Atual", function()
+    local player = game:GetService("Players").LocalPlayer
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        savedPosition = player.Character.HumanoidRootPart.CFrame
+        Fluent:Notify({
+            Title = "Posição Salva",
+            Content = "Posição atual salva com sucesso!",
+            Duration = 2
+        })
+    else
+        Fluent:Notify({
+            Title = "Erro",
+            Content = "Personagem não encontrado!",
+            Duration = 2
+        })
+    end
+end, "rbxassetid://6031094678")
+
+adicionarBotaoScrollTeleportar("Teleportar para Posição Salva", function()
+    if savedPosition then
+        local player = game:GetService("Players").LocalPlayer
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = savedPosition
+            Fluent:Notify({
+                Title = "Teleporte",
+                Content = "Teleportado para a posição salva!",
+                Duration = 2
+            })
+        else
+            Fluent:Notify({
+                Title = "Erro",
+                Content = "Personagem não encontrado!",
+                Duration = 2
+            })
+        end
+    else
+        Fluent:Notify({
+            Title = "Erro",
+            Content = "Nenhuma posição salva!",
+            Duration = 2
+        })
+    end
+end, "rbxassetid://6035067665")
